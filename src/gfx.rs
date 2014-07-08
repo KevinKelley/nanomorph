@@ -1,6 +1,5 @@
-// gfx.rs
 
-//use std::cmp::{min,max};
+//use std::cmp::{min,max}; // waah!  f32 isn't comparable!
 
 pub fn min(a:f32, b:f32) -> f32 { if a<b { a } else { b } }
 pub fn max(a:f32, b:f32) -> f32 { if b<a { a } else { b } }
@@ -17,6 +16,11 @@ pub struct Rect {
 }
 impl Rect {
 	pub fn zero() -> Rect { Rect { x:0.0, y:0.0, w:0.0, h:0.0 } }
+
+	pub fn x(&self) -> f32 { self.x }
+	pub fn y(&self) -> f32 { self.y }
+	pub fn w(&self) -> f32 { self.w }
+	pub fn h(&self) -> f32 { self.h }
 
 	pub fn moveTo(&self, x: f32, y: f32) {
 
@@ -65,10 +69,12 @@ pub struct Color {
 	r: u8, g: u8, b: u8, a: u8
 }
 impl Color {
-	pub fn r(&self) -> u8 { self.r }
-	pub fn g(&self) -> u8 { self.g }
-	pub fn b(&self) -> u8 { self.b }
-	pub fn a(&self) -> u8 { self.a }
+	pub fn black() -> Color { Color{r:0,g:0,b:0,a:0} }
+
+	pub fn r(&self) -> f32 { self.r as f32 / 255.0 }
+	pub fn g(&self) -> f32 { self.g as f32 / 255.0 }
+	pub fn b(&self) -> f32 { self.b as f32 / 255.0 }
+	pub fn a(&self) -> f32 { self.a as f32 / 255.0 }
 }
 
 pub trait Brush {
@@ -90,7 +96,6 @@ trait Gfx {
 	fn fillOval(&self, x:f32,y:f32, w:f32,h:f32, c: Color);
 	fn drawPolygon(&self, points: Vec<Point>);
 }
-
 
 
 

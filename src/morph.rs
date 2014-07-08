@@ -30,7 +30,6 @@ trait Collection {
 trait Composite {
     fn addMorph(&self, morph: &Box<Morphic>);
     fn removeMorph(&self, morph: &Box<Morphic>);
-    //fn getParent(&self) -> Option<Box<Morphic>>;
     fn getParent<'s>(&'s self) -> &'s Option<Box<Morphic>>;
     fn getTopParent(&self) -> Box<Morphic>;
     fn removeFromOwner(&self);
@@ -153,4 +152,43 @@ impl BoundingBox for Morph {
     fn inside(&self, x: f32, y: f32) -> bool { self.bounds.containsPoint(x,y) }
     fn contains(&self, bbox: &Rect) -> bool { self.bounds.contains(bbox) }
     fn damaged(&self, r: &Rect) {  }
+}
+
+impl Position for Morph {
+    fn x(&self) -> f32 { self.bounds().x() }
+    fn y(&self) -> f32 { self.bounds().y() }
+    fn w(&self) -> f32 { self.bounds().w() }
+    fn h(&self) -> f32 { self.bounds().h() }
+    fn relativeX(&self) -> f32 {
+    	match self.owner {
+	    	Some(ref owner) => return self.bounds().x() - owner.bounds().x ,
+	    	None => return self.bounds().x()
+    	}
+    }
+    fn relativeY(&self) -> f32 {
+    	match self.owner {
+	    	Some(ref owner) => return self.bounds().y() - owner.bounds().y ,
+	    	None => return self.bounds().y()
+    	}
+    }
+    fn setPosition(&self, newX: f32, newY: f32) {}
+    fn move(&self, dx: f32, dy: f32) {}
+}
+
+impl Size for Morph {
+    fn setSize(&self, newWidth: f32, newHeight: f32) {}
+    fn resize(&self, deltaW: f32, deltaH: f32) {}
+    fn scale(&self, factor: f32) {}
+}
+
+impl Picking for Morph {
+	// test for submorphs that fall outside this morph's bounds
+    //fn testBadBounds(&self) -> bool;
+	fn pick(&self, x: f32, y: f32) -> Vec<&Morphic> { vec!() }
+    fn dropTest(&self, morph: &Morphic) -> bool { false }
+}
+
+impl Colorable for Morph {
+    fn getColor(&self) -> Color { Color::black() }
+    fn setColor(&self, newColor: Color) {}
 }
