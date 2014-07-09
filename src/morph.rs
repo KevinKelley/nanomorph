@@ -9,8 +9,10 @@
 #![allow(unused_variable)]
 
 pub use gfx::*;
-pub mod gfx;
+pub use rawlink::*;
 
+pub mod gfx;
+    mod rawlink;
 
 /////////////////////////////////////////////
 #[deriving(PartialEq)] //Eq Clone Show Hash PartialEq

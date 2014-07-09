@@ -5,45 +5,11 @@
 #![allow(unused_variable)]
 #![allow(raw_pointer_deriving)]
 
-use std::ptr;
-use std::mem;
+use rawlink::{Rawlink};
+
+mod rawlink;
 
 type Link<T> = Option<Box<Node<T>>>;
-
-#[deriving(Clone, Show)]
-struct Rawlink<T> { p: *mut T }
-
-/// Rawlink is a type like Option<T> but for holding a raw pointer
-impl<T> Rawlink<T> {
-    /// Like Option::None for Rawlink
-    pub fn none() -> Rawlink<T> {
-        Rawlink{p: ptr::mut_null()}
-    }
-
-    /// Like Option::Some for Rawlink
-    pub fn some(n: &mut T) -> Rawlink<T> {
-        Rawlink{p: n}
-    }
-
-    /// Convert the `Rawlink` into an Option value
-    fn resolve_immut(&self) -> Option<&T> {
-        unsafe { self.p.to_option() }
-    }
-
-    /// Convert the `Rawlink` into an Option value
-    fn resolve(&mut self) -> Option<&mut T> {
-        if self.p.is_null() {
-            None
-        } else {
-            Some(unsafe { mem::transmute(self.p) })
-        }
-    }
-
-    /// Return the `Rawlink` and replace with `Rawlink::none()`
-    fn take(&mut self) -> Rawlink<T> {
-        mem::replace(self, Rawlink::none())
-    }
-}
 
 struct Node<T> {
     next: Link<T>,
@@ -51,7 +17,7 @@ struct Node<T> {
     value: T,
 }
 
-#[deriving(Clone, Show)]
+#[deriving(PartialEq, Clone, Show)]
 struct TreeNode {
 	parent: Rawlink<TreeNode>,
 	kids: Vec<Box<TreeNode>>
@@ -72,18 +38,36 @@ impl TreeNode {
 	fn get<'a>(&'a self, ix: uint) -> &'a Box<TreeNode> {
 		self.kids.get(ix)
 	}
+	fn get_mut<'a>(&'a mut self, ix: uint) -> &'a mut Box<TreeNode> {
+		self.kids.get_mut(ix)
+	}
 
 	fn add(&mut self, mut kid: Box<TreeNode>) {
-		// kid.parent.remove(kid)
+		match kid.getParent() {
+			Some(oldparent) => { oldparent.remove(&mut kid); },
+			None => {}
+		}
 		let p: *mut TreeNode = &mut*self;
 		kid.parent = Rawlink::some(self);
 		self.kids.push(kid)
 	}
-	fn remove(&mut self) -> Box<TreeNode> {
-		let kid = self.kids.pop().unwrap();
-		//let oldparent = kid.getParent();
-		//oldparent.remove();
-		kid
+	fn indexOf(&mut self, kid: &Box<TreeNode>) -> Option<uint> {
+		let mut ix = 0u;
+		for it in self.kids.iter() {
+			if it == kid { return Some(ix); }
+			ix += 1
+		}
+		None
+	}
+	fn removeAt(&mut self, ix: uint) -> Option<Box<TreeNode>> {
+		self.kids.remove(ix)
+	}
+	fn remove(&mut self, kid: &mut Box<TreeNode>) -> Option<Box<TreeNode>> {
+		//let ref k = *kid;
+		match self.indexOf(kid) {
+			Some(ix) => self.removeAt(ix),
+			None => None
+		}
 	}
 }
 
@@ -93,13 +77,18 @@ fn main() {
 		parent: Rawlink::none(),
 		kids: vec!()
 	};
-	let k1 = box TreeNode {
+	let  k1 = box TreeNode {
 		parent: Rawlink::some(&mut*root),
 		kids: vec!()
 	};
-	root.kids.push(k1);
-
+	root.add(k1);
 	println!("{}", root);
+	//let k = root.get(0);
+	match root.removeAt(0) {
+		Some(k) => println!("{}, {}", root, k),
+		None => println!("woops")
+	}
+	//println!("{}, {}", root, k1);
 }
 
 
