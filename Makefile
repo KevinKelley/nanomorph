@@ -12,8 +12,12 @@ BUILD_BIN = rustc                  --opt-level 3 --out-dir $(bin_path) $(libs)
 
 all: node
 
+run: node
+	bin/node
+
 node:
-	$(BUILD_LIB) $(src_path)/node.rs
+	mkdir -p $(bin_path)
+	$(BUILD_BIN) $(src_path)/node.rs
 
 lib: $(SRC_FILES)
 	mkdir -p $(lib_path)
