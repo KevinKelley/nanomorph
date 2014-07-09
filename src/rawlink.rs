@@ -1,4 +1,4 @@
-
+#![allow(raw_pointer_deriving)]
 
 use std::ptr;
 use std::mem;
