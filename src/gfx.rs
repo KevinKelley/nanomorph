@@ -12,7 +12,10 @@ pub struct Point {
 
 #[deriving(PartialEq, Clone, Show)]
 pub struct Rect {
-	pub x: f32, pub y: f32, pub w: f32, pub h: f32
+	x: f32,
+	y: f32,
+	w: f32,
+	h: f32
 }
 impl Rect {
 	pub fn zero() -> Rect { Rect { x:0.0, y:0.0, w:0.0, h:0.0 } }
@@ -21,6 +24,10 @@ impl Rect {
 	pub fn y(&self) -> f32 { self.y }
 	pub fn w(&self) -> f32 { self.w }
 	pub fn h(&self) -> f32 { self.h }
+
+	pub fn origin(&self) -> Point { Point { x: self.x(), y: self.y() } }
+	pub fn corner(&self) -> Point { Point { x: self.x()+self.w(), y: self.y()+self.h() } }
+
 
 	pub fn moveTo(&self, x: f32, y: f32) {
 
@@ -86,7 +93,7 @@ pub trait Brush {
 //  #pen: Pen
 //  #clip: Rect
 
-trait Gfx {
+pub trait Gfx {
 	fn drawText(&self, txt: &str, x:f32, y:f32, c: Color);
 	fn drawRect(&self, x:f32,y:f32, w:f32,h:f32, c: Color);
 	fn fillRect(&self, x:f32,y:f32, w:f32,h:f32, c: Color);

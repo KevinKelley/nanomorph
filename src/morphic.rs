@@ -21,11 +21,11 @@ type TPredicate = fn (&Morphic) -> bool;
 
 trait Collection {
 	fn numItems(&self) -> uint;
-	fn indexOf(&self, item: &Box<Morphic>) -> int;
-	fn contains(&self, item: &Box<Morphic>) -> bool;
+	fn indexOf(&self, item: &Morphic) -> int;
+	fn contains(&self, item: &Morphic) -> bool;
 	//fn find(&self, predicate: TPredicate) -> &Morphic;
-	fn add(&mut self, item: Box<Morphic>);
-	fn remove(&mut self, item: Box<Morphic>) -> Box<Morphic>;
+	fn add(&mut self, item: &Morphic);
+	fn remove(&mut self, item: &Morphic) -> &Morphic;
 	//fn each(&self, closure: TFunc);
 	// apply closure to each of my own children
 	//fn onItemsDo(&self, closure: TFunc);
@@ -36,12 +36,12 @@ trait Collection {
 }
 
 trait Composite {
-    fn addMorph(&mut self, morph: Box<Morphic>);
-    fn removeMorph(&mut self, morph: Box<Morphic>) -> Box<Morphic>;
-    //fn getParent<'s>(&'s mut self) -> &'s Option<Box<Morphic>>;
-    fn getParent(&mut self) -> Option<&mut Box<Morphic>>;
-    //fn getTopParent(&mut self) -> Box<Morphic>;
-    fn getTopParent(&mut self) -> &mut Box<Morphic>;
+    fn addMorph(&mut self, morph: &Morphic);
+    fn removeMorph(&mut self, morph: &Morphic) -> &Morphic;
+    //fn getParent<'s>(&'s mut self) -> &'s Option<Morphic>;
+    fn getParent(&mut self) -> Option<&mut Morphic>;
+    //fn getTopParent(&mut self) -> Morphic;
+    fn getTopParent(&mut self) -> &mut Morphic;
     fn removeFromOwner(&self);
 }
 trait BoundingBox {
@@ -53,17 +53,17 @@ trait BoundingBox {
 trait Position {
     fn x(&self) -> f32;
     fn y(&self) -> f32;
-    fn w(&self) -> f32;
-    fn h(&self) -> f32;
     fn relativeX(&self) -> f32;
     fn relativeY(&self) -> f32;
     fn setPosition(&self, newX: f32, newY: f32);
     fn move(&self, dx: f32, dy: f32);
 }
 trait Size {
+    fn w(&self) -> f32;
+    fn h(&self) -> f32;
     fn setSize(&mut self, newWidth: f32, newHeight: f32);
-    fn resize(&mut self, deltaW: f32, deltaH: f32);
-    fn scale(&mut self, factor: f32);
+    //fn resize(&mut self, deltaW: f32, deltaH: f32);
+    //fn scale(&mut self, factor: f32);
 }
 trait Picking {
 	// test for submorphs that fall outside this morph's bounds
@@ -75,10 +75,13 @@ trait Colorable {
     fn getColor(&self) -> Color;
     fn setColor(&mut self, newColor: Color);
 }
+trait Draw {
+    fn draw(&self, gfx: &mut Gfx);
+}
 
 
-trait Morphic: Collection+Composite+BoundingBox+Position+Size+Picking+Colorable {
-	fn onAdd(&self, newparent: &Option<Box<Morphic>>);
+trait Morphic: Collection+Composite+BoundingBox+Position+Size+Picking+Colorable+Draw {
+	fn onAdd(&self, newparent: &Option<&Morphic>);
 }
 
 #[deriving(PartialEq)] //Eq Clone Show Hash PartialEq
@@ -96,21 +99,21 @@ impl PartialEq for Box<Morphic> {
 
 impl Collection for BaseMorph {
 	fn numItems(&self) -> uint { self.subMorphs.len() }
-	fn indexOf(&self, item: &Box<Morphic>) -> int {
+	fn indexOf(&self, item: &Morphic) -> int {
 		let mut ix = 0;
 		for it in self.subMorphs.iter() {
-			if *it == *item { return ix; }
+			if it == item { return ix; }
 			ix += 1;
 		}
 		return -1;
 	}
-	fn contains(&self, item: &Box<Morphic>) -> bool { self.subMorphs.contains(item) }
+	fn contains(&self, item: &Morphic) -> bool { self.subMorphs.contains(item) }
 //	//fn find(&self, predicate: TPredicate) -> &Morphic { self.subMorphs. }
-	fn add(&mut self, item: Box<Morphic>) {
+	fn add(&mut self, item: &Morphic) {
 		//self.subMorphs.push(item);
 	}
-	fn remove(&mut self, item: Box<Morphic>) -> Box<Morphic> {
-		let ix: int = self.indexOf(&item);
+	fn remove(&mut self, item: &Morphic) -> &Morphic {
+		let ix: int = self.indexOf(item);
 		assert!(ix != -1);
 		self.subMorphs.remove(ix as uint).unwrap()
 	}
@@ -121,20 +124,20 @@ impl Collection for BaseMorph {
 }
 
 impl Composite for BaseMorph {
-    fn addMorph(&mut self, morph: Box<Morphic>) {
+    fn addMorph(&mut self, morph: &Morphic) {
     	morph.removeFromOwner();
 	    self.add(morph);
 	    self.damaged(&self.bounds());
-//	    morph.onAdd(&Some(box *self as Box<Morphic>));
+//	    morph.onAdd(&Some(box *self as Morphic));
     }
-    fn removeMorph(&mut self, morph: Box<Morphic>) -> Box<Morphic> {
+    fn removeMorph(&mut self, morph: &Morphic) -> &Morphic {
 	    let m = self.remove(morph);
 	    self.getTopParent().damaged(&self.bounds());
 	    m
     }
 
 	//fn getParent(&mut self) -> Option<&mut TreeNode> { self.parent.resolve() }
-    fn getParent(&mut self) -> Option<&mut Box<Morphic>> { self.owner.resolve() }
+    fn getParent(&mut self) -> Option<&mut Morphic> { self.owner.resolve() }
 
 	//fn getRoot<'a>(&'a mut self) -> &'a mut TreeNode {
 	//	match self.getParent() {
@@ -142,17 +145,17 @@ impl Composite for BaseMorph {
 	//		None => self
 	//	}
 	//}
-    //fn getTopParent<'a>(&'a mut self) -> &'a mut Box<Morphic> {
-    fn getTopParent(&mut self) -> &mut Box<Morphic> {
+    //fn getTopParent<'a>(&'a mut self) -> &'a mut Morphic {
+    fn getTopParent(&mut self) -> &mut Morphic {
 		match self.getParent() {
 			Some(p) => p.getTopParent(),
 			None => self
 		}
     }
-//+    fn getTopParent(&self) -> &Box<Morphic> {
+//+    fn getTopParent(&self) -> &Morphic {
 //+	    match self.owner {
 //+	    	Some(ref owner) => return owner.getTopParent(),
-//+	    	None => return  *self as Box<Morphic>
+//+	    	None => return  *self as Morphic
 //+	    }
 //+    }
     fn removeFromOwner(&self) {
@@ -176,8 +179,6 @@ impl BoundingBox for BaseMorph {
 impl Position for BaseMorph {
     fn x(&self) -> f32 { self.bounds().x() }
     fn y(&self) -> f32 { self.bounds().y() }
-    fn w(&self) -> f32 { self.bounds().w() }
-    fn h(&self) -> f32 { self.bounds().h() }
     fn relativeX(&self) -> f32 {
     	match self.getParent() {
 	    	Some(ref owner) => return self.bounds().x() - owner.bounds().x ,
@@ -195,9 +196,11 @@ impl Position for BaseMorph {
 }
 
 impl Size for BaseMorph {
+    fn w(&self) -> f32 { self.bounds().w() }
+    fn h(&self) -> f32 { self.bounds().h() }
     fn setSize(&mut self, newWidth: f32, newHeight: f32) {}
-    fn resize(&mut self, deltaW: f32, deltaH: f32) {}
-    fn scale(&mut self, factor: f32) {}
+    //fn resize(&mut self, deltaW: f32, deltaH: f32) {}
+    //fn scale(&mut self, factor: f32) {}
 }
 
 impl Picking for BaseMorph {
@@ -212,6 +215,10 @@ impl Colorable for BaseMorph {
     fn setColor(&mut self, newColor: Color) {}
 }
 
+impl Draw for BaseMorph {
+    fn draw(&self, gfx: &mut Gfx) {}
+}
+
 impl Morphic for BaseMorph {
-	fn onAdd(&self, newparent: &Option<Box<Morphic>>) {}
+	fn onAdd(&self, newparent: &Option<&Morphic>) {}
 }

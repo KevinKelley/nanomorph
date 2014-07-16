@@ -9,23 +9,23 @@ use rawlink::{Rawlink};
 
 mod rawlink;
 
-type Link<T> = Option<Box<Node<T>>>;
-
-struct Node<T> {
-    next: Link<T>,
-    prev: Rawlink<Node<T>>,
-    value: T,
-}
+//type Link<T> = Option<Box<Node<T>>>;
+//
+//struct Node<T> {
+//    next: Link<T>,
+//    prev: Rawlink<Node<T>>,
+//    value: T,
+//}
 
 #[deriving(PartialEq, Clone, Show)]
 struct TreeNode {
 	parent: Rawlink<TreeNode>,
-	kids: Vec<Box<TreeNode>>
+	kids: Vec<TreeNode>
 }
 
 impl TreeNode {
 
-	//fn getParent<'a>(&'a self) -> &'a Option<Box<TreeNode>> { &(self.parent) }
+	//fn getParent<'a>(&'a self) -> &'a Option<TreeNode> { &(self.parent) }
 	fn getParent(&mut self) -> Option<&mut TreeNode> { self.parent.resolve() }
 
 	fn getRoot<'a>(&'a mut self) -> &'a mut TreeNode {
@@ -35,14 +35,14 @@ impl TreeNode {
 		}
 	}
 
-	fn get<'a>(&'a self, ix: uint) -> &'a Box<TreeNode> {
+	fn get<'a>(&'a self, ix: uint) -> &'a TreeNode {
 		self.kids.get(ix)
 	}
-	fn get_mut<'a>(&'a mut self, ix: uint) -> &'a mut Box<TreeNode> {
+	fn get_mut<'a>(&'a mut self, ix: uint) -> &'a mut TreeNode {
 		self.kids.get_mut(ix)
 	}
 
-	fn add(&mut self, mut kid: Box<TreeNode>) {
+	fn add(&mut self, mut kid: TreeNode) {
 		match kid.getParent() {
 			Some(oldparent) => { oldparent.remove(&mut kid); },
 			None => {}
@@ -51,7 +51,7 @@ impl TreeNode {
 		kid.parent = Rawlink::some(self);
 		self.kids.push(kid)
 	}
-	fn indexOf(&mut self, kid: &Box<TreeNode>) -> Option<uint> {
+	fn indexOf(&mut self, kid: &TreeNode) -> Option<uint> {
 		let mut ix = 0u;
 		for it in self.kids.iter() {
 			if it == kid { return Some(ix); }
@@ -59,26 +59,36 @@ impl TreeNode {
 		}
 		None
 	}
-	fn removeAt(&mut self, ix: uint) -> Option<Box<TreeNode>> {
+	fn removeAt(&mut self, ix: uint) -> Option<TreeNode> {
 		self.kids.remove(ix)
 	}
-	fn remove(&mut self, kid: &mut Box<TreeNode>) -> Option<Box<TreeNode>> {
+	fn remove(&mut self, kid: &mut TreeNode) -> Option<TreeNode> {
 		//let ref k = *kid;
 		match self.indexOf(kid) {
 			Some(ix) => self.removeAt(ix),
 			None => None
 		}
 	}
+    fn removeFromOwner(&mut self) {
+	    match self.getParent() {
+	    	Some(oldOwner) => {
+	    		oldOwner.remove(self);
+	    		self.onAdd(None);
+	    	},
+	    	None => {}
+	    }
+    }
+    fn onAdd(&self, kid: Option<&TreeNode>) {}
 }
 
 
 fn main() {
-	let mut root = box TreeNode {
+	let mut root = TreeNode {
 		parent: Rawlink::none(),
 		kids: vec!()
 	};
-	let  k1 = box TreeNode {
-		parent: Rawlink::some(&mut*root),
+	let  k1 = TreeNode {
+		parent: Rawlink::some(&mut root),
 		kids: vec!()
 	};
 	root.add(k1);
