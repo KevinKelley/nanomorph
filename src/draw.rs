@@ -1,14 +1,11 @@
 
-extern crate gl;
-extern crate libc;
 
 use std::ptr;
-use std::num::*;
+use std::num::{pow};
+use nanovg;
 use nanovg::*;
-use gl::{ReadPixels, RGBA, UNSIGNED_BYTE};
-use libc::{c_void};
-
-use demodata;
+use gfx::*;
+use icons::*;
 
 
 static PI: f32 = 3.1415926535;
@@ -24,18 +21,22 @@ fn sin(x: f32) -> f32 { x.sin() }
 fn is_black(c: Color) -> bool {	c.r==0.0 && c.g==0.0 && c.b==0.0 && c.a==0.0 }
 
 
+pub trait Draw {
+	fn draw(&self, vg: &Ctx);
+}
+
 pub struct Window {
-	pub title: &str,
+	pub title: String,
 	pub bounds: Rect
 }
 impl Draw for Window {
 	fn draw(&self, vg: &Ctx)
 	{
-		let title = self.title;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let title = self.title.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 
 		let cornerRadius = 3.0;
 
@@ -87,17 +88,17 @@ impl Draw for Window {
 }
 
 pub struct SearchBox {
-	pub text: &str,
+	pub text: String,
 	pub bounds: Rect
 }
-impl Draw for Window {
+impl Draw for SearchBox {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 
 		let cornerRadius = h/2.0 - 1.0;
 
@@ -135,17 +136,17 @@ impl Draw for Window {
 }
 
 pub struct DropDown {
-	pub text: &str,
+	pub text: String,
 	pub bounds: Rect
 }
 impl Draw for DropDown {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 
 		let cornerRadius = 4.0;
 
@@ -176,17 +177,17 @@ impl Draw for DropDown {
 
 
 pub struct Label {
-	pub text: &str,
+	pub text: String,
 	pub bounds: Rect
 }
 impl Draw for Label {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 
 		vg.font_size(18.0);
 		vg.font_face("sans");
@@ -199,7 +200,7 @@ impl Draw for Label {
 
 
 pub struct Paragraph {
-	pub text: &str,
+	pub text: String,
 	pub bounds: Rect,
 	pub mx: f32,
 	pub my: f32
@@ -207,11 +208,11 @@ pub struct Paragraph {
 impl Draw for Paragraph {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let width = self.bounds.w;
-		let height = self.bounds.h;
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let width = self.bounds.w();
+		let height = self.bounds.h();
 		let mx = self.mx;
 		let my = self.my;
 
@@ -366,19 +367,19 @@ impl Draw for Paragraph {
 
 
 pub struct EditBox {
-	pub text: &str,
+	pub text: String,
 	pub bounds: Rect
 }
 impl Draw for EditBox {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 
-		draw_editbox_base(vg, x,y, w,h);
+		EditBox::draw_editbox_base(vg, x,y, w,h);
 
 		vg.font_size(20.0);
 		vg.font_face("sans");
@@ -386,7 +387,8 @@ impl Draw for EditBox {
 		vg.text_align(LEFT|MIDDLE);
 		vg.text(x+h*0.3,y+h*0.5,text);
 	}
-
+}
+impl EditBox {
 	fn draw_editbox_base(vg: &Ctx, x: f32, y: f32, w: f32, h: f32)
 	{
 		// Edit
@@ -404,7 +406,7 @@ impl Draw for EditBox {
 
 	fn draw_editbox_num(vg: &Ctx, text: &str, units: &str, x: f32, y: f32, w: f32, h: f32)
 	{
-		draw_editbox_base(vg, x,y, w,h);
+		EditBox::draw_editbox_base(vg, x,y, w,h);
 
 		let mut bounds: f32 = 0.0;
 		let uw = vg.text_bounds(0.0,0.0, units, &mut bounds);
@@ -425,17 +427,17 @@ impl Draw for EditBox {
 
 
 pub struct CheckBox {
-	pub text: &str,
+	pub text: String,
 	pub bounds: Rect
 }
 impl Draw for CheckBox {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 
 		vg.font_size(18.0);
 		vg.font_face("sans");
@@ -461,19 +463,21 @@ impl Draw for CheckBox {
 
 pub struct Button {
 	pub icon: char,  // unicode char to stringify and draw from font-glyph
-	pub text: &str,
-	pub color: Color,
+	pub text: String,
+	pub color: nanovg::Color,
 	pub bounds: Rect
 }
 impl Draw for Button {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
-		let preicon = self.icon.to_string();
+		let text = self.text.as_slice();
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
+
+		let stricon = String::from_char(1, self.icon);
+		let preicon = stricon.as_slice();
 		let col = self.color;
 
 		let cornerRadius = 4.0;
@@ -531,11 +535,11 @@ pub struct Slider {
 impl Draw for Slider {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
+		let pos = self.pos;
 
 		let cy: f32 = y+floor(h*0.5);
 		let kr: f32 = floor(h*0.25);
@@ -579,15 +583,15 @@ impl Draw for Slider {
 
 
 pub struct Spinner {
-	pub text: &str,
-	pub center: Point,,
+	pub text: String,
+	pub center: Point,
 	pub rho: f32,
 	pub theta: f32
 }
 impl Draw for Spinner {
 	fn draw(&self, vg: &Ctx)
 	{
-		let text = self.text;
+		let text = self.text.as_slice();
 		let cx = self.center.x;
 		let cy = self.center.y;
 		let r = self.rho;
@@ -622,12 +626,12 @@ pub struct ColorWheel {
 	pub theta: f32
 }
 impl Draw for ColorWheel {
-	pub fn draw(&self, vg: &Ctx)
+	fn draw(&self, vg: &Ctx)
 	{
-		let x = self.bounds.x;
-		let y = self.bounds.y;
-		let w = self.bounds.w;
-		let h = self.bounds.h;
+		let x = self.bounds.x();
+		let y = self.bounds.y();
+		let w = self.bounds.w();
+		let h = self.bounds.h();
 		let t = self.theta;
 
 		//f32 r0, r1, ax,ay, bx,by, cx,cy, aeps, r;
@@ -877,128 +881,128 @@ fn draw_graph(vg: &Ctx, x: f32,
 	vg.stroke_width(1.0);
 }
 
-fn draw_thumbnails(vg: &Ctx, x: f32, y: f32, w: f32, h: f32,
-                  images: [i32, ..12], nimages: uint, t: f32)
-{
-	let cornerRadius = 3.0;
-
-	let thumb: f32 = 60.0;
-	let arry : f32 = 30.5;
-	let stackh: f32 = (nimages/2) as f32 * (thumb+10.0) + 10.0;
-	let u : f32 = (1.0+cos(t*0.5))*0.5;
-	let u2: f32 = (1.0-cos(t*0.2))*0.5;
-
-	vg.save();
-	//	vg.clear_state();
-
-	// Drop shadow
-	let mut shadowPaint = vg.box_gradient(x,y+4.0, w,h, cornerRadius*2.0, 20.0, rgba(0,0,0,128), rgba(0,0,0,0));
-	vg.begin_path();
-	vg.rect(x-10.0,y-10.0, w+20.0,h+30.0);
-	vg.rounded_rect(x,y, w,h, cornerRadius);
-	vg.path_winding(HOLE);
-	vg.fill_paint(shadowPaint);
-	vg.fill();
-
-	// Window
-	vg.begin_path();
-	vg.rounded_rect(x,y, w,h, cornerRadius);
-	vg.move_to(x-10.0,y+arry);
-	vg.line_to(x+1.0,y+arry-11.0);
-	vg.line_to(x+1.0,y+arry+11.0);
-	vg.fill_color(rgba(200,200,200,255));
-	vg.fill();
-
-	vg.save();
-	vg.scissor(x,y,w,h);
-	vg.translate(0.0, -(stackh-h)*u);
-
-	let dv = 1.0 / (nimages as f32 - 1.0);
-
-	for i in range(0, nimages) {
-		let mut tx = x+10.0;
-		let mut ty = y+10.0;
-		tx += (i%2) as f32 * (thumb+10.0);
-		ty += (i/2) as f32 * (thumb+10.0);
-		let mut imgw: i32 = 0;
-		let mut imgh: i32 = 0;
-		let ix: f32;
-		let iy: f32;
-		let iw: f32;
-		let ih: f32;
-		vg.image_size(images[i], &mut imgw, &mut imgh);
-		if imgw < imgh {
-			iw = thumb;
-			ih = iw * (imgh as f32) / (imgw as f32);
-			ix = 0.0;
-			iy = -(ih-thumb)*0.5;
-		} else {
-			ih = thumb;
-			iw = ih * (imgw as f32) / (imgh as f32);
-			ix = -(iw-thumb)*0.5;
-			iy = 0.0;
-		}
-
-		let v = i as f32 * dv;
-		let a = clamp((u2-v) / dv, 0.0, 1.0);
-
-		if a < 1.0 {
-			draw_spinner(vg, tx+thumb/2.0,ty+thumb/2.0, thumb*0.25, t);
-		}
-
-		let imgPaint = vg.image_pattern(tx+ix, ty+iy, iw,ih, 0.0/180.0*PI, images[i], NOREPEAT, a);
-		vg.begin_path();
-		vg.rounded_rect(tx,ty, thumb,thumb, 5.0);
-		vg.fill_paint(imgPaint);
-		vg.fill();
-
-		shadowPaint = vg.box_gradient(tx-1.0,ty, thumb+2.0,thumb+2.0, 5.0, 3.0, rgba(0,0,0,128), rgba(0,0,0,0));
-		vg.begin_path();
-		vg.rect(tx-5.0,ty-5.0, thumb+10.0,thumb+10.0);
-		vg.rounded_rect(tx,ty, thumb,thumb, 6.0);
-		vg.path_winding(HOLE);
-		vg.fill_paint(shadowPaint);
-		vg.fill();
-
-		vg.begin_path();
-		vg.rounded_rect(tx+0.5,ty+0.5, thumb-1.0,thumb-1.0, 4.0-0.5);
-		vg.stroke_width(1.0);
-		vg.stroke_color(rgba(255,255,255,192));
-		vg.stroke();
-	}
-	vg.restore();
-
-	// Hide fades
-	let mut fadePaint = vg.linear_gradient(x,y,x,y+6.0, rgba(200,200,200,255), rgba(200,200,200,0));
-	vg.begin_path();
-	vg.rect(x+0.4,y,w-8.0,6.0);
-	vg.fill_paint(fadePaint);
-	vg.fill();
-
-	fadePaint = vg.linear_gradient(x,y+h,x,y+h-6.0, rgba(200,200,200,255), rgba(200,200,200,0));
-	vg.begin_path();
-	vg.rect(x+4.0,y+h-6.0,w-8.0,6.0);
-	vg.fill_paint(fadePaint);
-	vg.fill();
-
-	// Scroll bar
-	shadowPaint = vg.box_gradient(x+w-12.0+1.0,y+4.0+1.0, 8.0,h-8.0, 3.0,4.0, rgba(0,0,0,32), rgba(0,0,0,92));
-	vg.begin_path();
-	vg.rounded_rect(x+w-12.0,y+4.0, 8.0,h-8.0, 3.0);
-	vg.fill_paint(shadowPaint);
-	//	vg.fill_color(rgba(255,0,0,128));
-	vg.fill();
-
-	let scrollh = (h/stackh) * (h-8.0);
-	shadowPaint = vg.box_gradient(x+w-12.0-1.0,y+4.0+(h-8.0-scrollh)*u-1.0, 8.0,scrollh, 3.0,4.0, rgba(220,220,220,255), rgba(128,128,128,255));
-	vg.begin_path();
-	vg.rounded_rect(x+w-12.0+1.0,y+4.0+1.0 + (h-8.0-scrollh)*u, 8.0-2.0,scrollh-2.0, 2.0);
-	vg.fill_paint(shadowPaint);
-	//	vg.fill_color(rgba(0,0,0,128));
-	vg.fill();
-
-	vg.restore();
-}
+//fn draw_thumbnails(vg: &Ctx, x: f32, y: f32, w: f32, h: f32,
+//                  images: [i32, ..12], nimages: uint, t: f32)
+//{
+//	let cornerRadius = 3.0;
+//
+//	let thumb: f32 = 60.0;
+//	let arry : f32 = 30.5;
+//	let stackh: f32 = (nimages/2) as f32 * (thumb+10.0) + 10.0;
+//	let u : f32 = (1.0+cos(t*0.5))*0.5;
+//	let u2: f32 = (1.0-cos(t*0.2))*0.5;
+//
+//	vg.save();
+//	//	vg.clear_state();
+//
+//	// Drop shadow
+//	let mut shadowPaint = vg.box_gradient(x,y+4.0, w,h, cornerRadius*2.0, 20.0, rgba(0,0,0,128), rgba(0,0,0,0));
+//	vg.begin_path();
+//	vg.rect(x-10.0,y-10.0, w+20.0,h+30.0);
+//	vg.rounded_rect(x,y, w,h, cornerRadius);
+//	vg.path_winding(HOLE);
+//	vg.fill_paint(shadowPaint);
+//	vg.fill();
+//
+//	// Window
+//	vg.begin_path();
+//	vg.rounded_rect(x,y, w,h, cornerRadius);
+//	vg.move_to(x-10.0,y+arry);
+//	vg.line_to(x+1.0,y+arry-11.0);
+//	vg.line_to(x+1.0,y+arry+11.0);
+//	vg.fill_color(rgba(200,200,200,255));
+//	vg.fill();
+//
+//	vg.save();
+//	vg.scissor(x,y,w,h);
+//	vg.translate(0.0, -(stackh-h)*u);
+//
+//	let dv = 1.0 / (nimages as f32 - 1.0);
+//
+//	for i in range(0, nimages) {
+//		let mut tx = x+10.0;
+//		let mut ty = y+10.0;
+//		tx += (i%2) as f32 * (thumb+10.0);
+//		ty += (i/2) as f32 * (thumb+10.0);
+//		let mut imgw: i32 = 0;
+//		let mut imgh: i32 = 0;
+//		let ix: f32;
+//		let iy: f32;
+//		let iw: f32;
+//		let ih: f32;
+//		vg.image_size(images[i], &mut imgw, &mut imgh);
+//		if imgw < imgh {
+//			iw = thumb;
+//			ih = iw * (imgh as f32) / (imgw as f32);
+//			ix = 0.0;
+//			iy = -(ih-thumb)*0.5;
+//		} else {
+//			ih = thumb;
+//			iw = ih * (imgw as f32) / (imgh as f32);
+//			ix = -(iw-thumb)*0.5;
+//			iy = 0.0;
+//		}
+//
+//		let v = i as f32 * dv;
+//		let a = clamp((u2-v) / dv, 0.0, 1.0);
+//
+//		if a < 1.0 {
+//			draw_spinner(vg, tx+thumb/2.0,ty+thumb/2.0, thumb*0.25, t);
+//		}
+//
+//		let imgPaint = vg.image_pattern(tx+ix, ty+iy, iw,ih, 0.0/180.0*PI, images[i], NOREPEAT, a);
+//		vg.begin_path();
+//		vg.rounded_rect(tx,ty, thumb,thumb, 5.0);
+//		vg.fill_paint(imgPaint);
+//		vg.fill();
+//
+//		shadowPaint = vg.box_gradient(tx-1.0,ty, thumb+2.0,thumb+2.0, 5.0, 3.0, rgba(0,0,0,128), rgba(0,0,0,0));
+//		vg.begin_path();
+//		vg.rect(tx-5.0,ty-5.0, thumb+10.0,thumb+10.0);
+//		vg.rounded_rect(tx,ty, thumb,thumb, 6.0);
+//		vg.path_winding(HOLE);
+//		vg.fill_paint(shadowPaint);
+//		vg.fill();
+//
+//		vg.begin_path();
+//		vg.rounded_rect(tx+0.5,ty+0.5, thumb-1.0,thumb-1.0, 4.0-0.5);
+//		vg.stroke_width(1.0);
+//		vg.stroke_color(rgba(255,255,255,192));
+//		vg.stroke();
+//	}
+//	vg.restore();
+//
+//	// Hide fades
+//	let mut fadePaint = vg.linear_gradient(x,y,x,y+6.0, rgba(200,200,200,255), rgba(200,200,200,0));
+//	vg.begin_path();
+//	vg.rect(x+0.4,y,w-8.0,6.0);
+//	vg.fill_paint(fadePaint);
+//	vg.fill();
+//
+//	fadePaint = vg.linear_gradient(x,y+h,x,y+h-6.0, rgba(200,200,200,255), rgba(200,200,200,0));
+//	vg.begin_path();
+//	vg.rect(x+4.0,y+h-6.0,w-8.0,6.0);
+//	vg.fill_paint(fadePaint);
+//	vg.fill();
+//
+//	// Scroll bar
+//	shadowPaint = vg.box_gradient(x+w-12.0+1.0,y+4.0+1.0, 8.0,h-8.0, 3.0,4.0, rgba(0,0,0,32), rgba(0,0,0,92));
+//	vg.begin_path();
+//	vg.rounded_rect(x+w-12.0,y+4.0, 8.0,h-8.0, 3.0);
+//	vg.fill_paint(shadowPaint);
+//	//	vg.fill_color(rgba(255,0,0,128));
+//	vg.fill();
+//
+//	let scrollh = (h/stackh) * (h-8.0);
+//	shadowPaint = vg.box_gradient(x+w-12.0-1.0,y+4.0+(h-8.0-scrollh)*u-1.0, 8.0,scrollh, 3.0,4.0, rgba(220,220,220,255), rgba(128,128,128,255));
+//	vg.begin_path();
+//	vg.rounded_rect(x+w-12.0+1.0,y+4.0+1.0 + (h-8.0-scrollh)*u, 8.0-2.0,scrollh-2.0, 2.0);
+//	vg.fill_paint(shadowPaint);
+//	//	vg.fill_color(rgba(0,0,0,128));
+//	vg.fill();
+//
+//	vg.restore();
+//}
 
 fn draw_lines(vg: &Ctx, x: f32, y: f32, w: f32, h: f32, t: f32)
 {

@@ -1,3 +1,6 @@
+
+//use gl::{ReadPixels, RGBA, UNSIGNED_BYTE};
+
 fn unpremultiply_alpha(image: &mut [u8], w: u32, h: u32, stride: u32)
 {
 	let w: uint = w as uint; let h: uint = h as uint; let stride: uint = stride as uint;

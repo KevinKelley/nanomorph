@@ -1,11 +1,18 @@
 
+use glfw;
+use nanovg;
+use glfw::Context;
 
 struct Window {
-
+    pub glfw_window: glfw::Window,
+    pub vg  : nanovg::Ctx,
+    premult: bool,
+    blowup: bool,
+    screenshot: bool
 }
 
 impl Window {
-	pub fn new(title: &str, w: u32, h: u32) {
+	pub fn new(glfw:glfw::Glfw, title: &str, w: u32, h: u32) {
         glfw.window_hint(glfw::ContextVersion(3, 2));
         glfw.window_hint(glfw::OpenglForwardCompat(true));
         glfw.window_hint(glfw::OpenglProfile(glfw::OpenGlCoreProfile));
@@ -20,22 +27,22 @@ impl Window {
         window.make_current();
 	}
 
-}
-
-fn handle_window_event(window: &glfw::Window, event: glfw::WindowEvent) {
-    match event {
-        glfw::KeyEvent(glfw::KeyEscape, _, glfw::Press, _) => {
-            window.set_should_close(true)
+    fn handle_window_event(&mut self, window: &glfw::Window, event: glfw::WindowEvent) {
+        match event {
+            glfw::KeyEvent(glfw::KeyEscape, _, glfw::Press, _) => {
+                window.set_should_close(true)
+            }
+            glfw::KeyEvent(glfw::KeySpace, _, glfw::Press, _) => {
+                self.blowup = !self.blowup;
+            }
+            glfw::KeyEvent(glfw::KeyS, _, glfw::Press, _) => {
+                self.screenshot = true;
+            }
+            glfw::KeyEvent(glfw::KeyP, _, glfw::Press, _) => {
+                self.premult = !self.premult;
+            }
+            _ => {}
         }
-        glfw::KeyEvent(glfw::KeySpace, _, glfw::Press, _) => {
-            unsafe {blowup = !blowup};
-        }
-        glfw::KeyEvent(glfw::KeyS, _, glfw::Press, _) => {
-            unsafe {screenshot = true};
-        }
-        glfw::KeyEvent(glfw::KeyP, _, glfw::Press, _) => {
-            unsafe {premult = !premult};
-        }
-        _ => {}
     }
 }
+

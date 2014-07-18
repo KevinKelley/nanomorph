@@ -17,8 +17,9 @@ use nanovg::Ctx;
 
 
 
-mod perf;
-mod demo;
+//mod perf;
+mod demo_window;
+mod resources;
 
 
 struct DemoApp {

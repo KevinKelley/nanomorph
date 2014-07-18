@@ -1,13 +1,4 @@
 
-/// use unicode characters for icons
-static NO_ICON: 		   String =         '\0'.toString();
-static ICON_SEARCH:        String = '\U0001F50D'.toString();
-static ICON_CIRCLED_CROSS: String =     '\u2716'.toString();
-static ICON_CHEVRON_RIGHT: String =     '\uE75E'.toString();
-static ICON_CHECK:         String =     '\u2713'.toString();
-static ICON_LOGIN:         String =     '\uE740'.toString();
-static ICON_TRASH:         String =     '\uE729'.toString();
-
 
 pub struct DemoData {
 	//vg: &Ctx,

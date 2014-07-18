@@ -1,5 +1,7 @@
 
+//use nanovg;
 //use std::cmp::{min,max}; // waah!  f32 isn't comparable!
+pub use Color = nanovg::Color;
 
 pub fn min(a:f32, b:f32) -> f32 { if a<b { a } else { b } }
 pub fn max(a:f32, b:f32) -> f32 { if b<a { a } else { b } }
@@ -71,22 +73,21 @@ impl Rect {
     }
 }
 
-#[deriving(Eq, PartialEq, Hash, Clone, Show)]
-pub struct Color {
-	r: u8, g: u8, b: u8, a: u8
-}
-impl Color {
-	pub fn black() -> Color { Color{r:0,g:0,b:0,a:0} }
 
-	pub fn r(&self) -> f32 { self.r as f32 / 255.0 }
-	pub fn g(&self) -> f32 { self.g as f32 / 255.0 }
-	pub fn b(&self) -> f32 { self.b as f32 / 255.0 }
-	pub fn a(&self) -> f32 { self.a as f32 / 255.0 }
-}
+//#[deriving(Eq, PartialEq, Hash, Clone, Show)]
+//pub struct Color {
+//	r: u8, g: u8, b: u8, a: u8
+//}
+//impl Color {
+//	pub fn black() -> Color { Color{r:0,g:0,b:0,a:0} }
+//
+//	pub fn r(&self) -> f32 { self.r as f32 / 255.0 }
+//	pub fn g(&self) -> f32 { self.g as f32 / 255.0 }
+//	pub fn b(&self) -> f32 { self.b as f32 / 255.0 }
+//	pub fn a(&self) -> f32 { self.a as f32 / 255.0 }
+//}
 
-pub trait Brush {
-
-}
+//pub trait Brush {}
 
 //type Graphics
 //  #brush: Brush
